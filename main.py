@@ -204,22 +204,27 @@ def update_repo_list(n_clicks, org_name):
     Input('plot-dropdown-1', 'value'),
     Input('plot-dropdown-2', 'value'),
     Input('plot-dropdown-3', 'value'),
-    State('org-input', 'value')
+    State('org-input', 'value'),
+    State('repo-dropdown', 'value')  # Added this input for selected repositories
 )
-def update_plots(plot1, plot2, plot3, org_name):
-    if org_name:
+def update_plots(plot1, plot2, plot3, org_name, selected_repos):
+    if org_name and selected_repos:  # Check if an organization is entered and repositories are selected
         df = GitHubRepoArchiver.fetch_repos(org_name)
+        
+        # Filter the dataframe to only include the selected repositories
+        df_filtered = df[df['name'].isin(selected_repos)]
+        
         plots = []
         for plot in [plot1, plot2, plot3]:
             if plot:
-                fig = PlotGenerator.get_plot(plot, df)
+                fig = PlotGenerator.get_plot(plot, df_filtered)  # Use the filtered dataframe
                 plots.append(fig)
             else:
                 plots.append(html.Div("Please select a plot."))
+        
         return plots
     return html.Div(), html.Div(), html.Div()
 
 # Run the app
 if __name__ == '__main__':
     app.run_server(debug=True)
-
